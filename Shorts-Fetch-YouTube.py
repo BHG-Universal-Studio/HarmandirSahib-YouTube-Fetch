@@ -496,6 +496,7 @@ for v in vod_candidates:
         "url": v["url"],
         "imageUrl": v["imageUrl"],
         "timestamp": int(v["published"].timestamp() * 1000),
+        "video_id": vid,
     })
 
     existing_ids.add(vid)
