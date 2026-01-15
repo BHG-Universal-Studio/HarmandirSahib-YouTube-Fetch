@@ -65,11 +65,13 @@ def fetch_latest_stream():
     # ✅ LATEST ONLY
     latest = max(matches, key=lambda x: x["published"])
 
+    video_id = latest["video_id"]
+
     return {
-        "imageUrl": f"https://i.ytimg.com/vi/{latest['video_id']}/maxresdefault.jpg",
-        "title": latest["title"],
-        "titleLowercase": final["snippet"]["title"].lower(),
-        "url": f"https://www.youtube.com/watch?v={latest['video_id']}"
+    "imageUrl": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg", 
+    "title": latest["title"],
+    "titleLowercase": latest["title"].lower(),
+    "url": f"https://www.youtube.com/watch?v={video_id}"
     }
 
 # ---------------- FIRESTORE UPDATE ----------------
