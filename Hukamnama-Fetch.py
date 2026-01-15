@@ -12,6 +12,7 @@ RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
 
 SERVICE_ACCOUNT_JSON = os.environ["FIREBASE_SERVICE_ACCOUNT"]
 COLLECTION_NAME = "Live-Gurdwaras-YouTube"
+YOUTUBE_API_KEY = os.environ["YOUTUBE_API_KEY"]
 # --------------------------------------
 
 NS = {
@@ -26,6 +27,31 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
+
+
+def get_best_thumbnail(thumbnails: dict, video_id: str) -> str:
+    for key in ("maxres", "standard", "high", "medium", "default"):
+        if key in thumbnails and "url" in thumbnails[key]:
+            return thumbnails[key]["url"]
+
+    return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+
+
+def fetch_video_snippet(video_id: str):
+    url = "https://www.googleapis.com/youtube/v3/videos"
+    params = {
+        "part": "snippet",
+        "id": video_id,
+        "key": YOUTUBE_API_KEY,
+        "maxResults": 1
+    }
+
+    r = requests.get(url, params=params, timeout=15)
+    r.raise_for_status()
+
+    items = r.json().get("items", [])
+    return items[0] if items else None
+
 
 # ---------------- RSS FETCH ----------------
 def fetch_latest_hukamnama_katha():
@@ -67,8 +93,11 @@ def fetch_latest_hukamnama_katha():
 
     video_id = latest["video_id"]
 
+    snippet_data = fetch_video_snippet(video_id)
+    thumbnails = snippet_data["snippet"].get("thumbnails", {}) if snippet_data else {}
+
     return {
-    "imageUrl": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg", 
+    "imageUrl": get_best_thumbnail(thumbnails, video_id),
     "title": latest["title"],
     "titleLowercase": latest["title"].lower(),
     "url": f"https://www.youtube.com/watch?v={video_id}"

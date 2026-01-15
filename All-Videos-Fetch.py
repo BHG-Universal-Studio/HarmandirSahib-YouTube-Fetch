@@ -91,6 +91,16 @@ total_skipped_keywords = 0
 total_inserted = 0
 new_ids_added = []
 
+
+def get_best_thumbnail(thumbnails: dict, video_id: str) -> str:
+    for key in ("maxres", "standard", "high", "medium", "default"):
+        if key in thumbnails and "url" in thumbnails[key]:
+            return thumbnails[key]["url"]
+
+    # Absolute safety fallback
+    return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+
+
 # ---------------- RSS FETCH ----------------
 def fetch_videos_from_channel(channel_id):
     url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
@@ -124,11 +134,37 @@ def fetch_videos_from_channel(channel_id):
             "video_id": video_id,
             "title": title_el.text.strip(),
             "url": f"https://www.youtube.com/watch?v={video_id}",
-            "imageUrl": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg",
             "published": published_dt
         })
 
     return videos
+
+
+def fetch_thumbnails_batch(video_ids):
+    thumbnail_map = {}
+    CHUNK_SIZE = 50
+
+    for chunk in chunk_list(video_ids, CHUNK_SIZE):
+        url = "https://www.googleapis.com/youtube/v3/videos"
+        params = {
+            "part": "snippet",
+            "id": ",".join(chunk),
+            "key": YOUTUBE_API_KEY,
+            "maxResults": 50
+        }
+
+        r = requests.get(url, params=params, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+
+        for item in data.get("items", []):
+            vid = item["id"]
+            thumbnails = item["snippet"].get("thumbnails", {})
+            thumbnail_map[vid] = get_best_thumbnail(thumbnails, vid)
+
+    return thumbnail_map
+
+
 
 # ---------------- HELPER: CHUNK LIST ----------------
 def chunk_list(data, chunk_size):
@@ -252,6 +288,10 @@ if not vod_candidates:
 print("\n⏱️ Checking Durations...")
 duration_map = fetch_durations_batch(vod_candidate_ids)
 
+print("\n🖼️ Fetching thumbnails...")
+thumbnail_map = fetch_thumbnails_batch(vod_candidate_ids)
+
+
 # 5. Insert Final Videos
 print("\n🚀 Starting Final Filtering & Firebase Insertion...")
 for v in vod_candidates:
@@ -286,7 +326,10 @@ for v in vod_candidates:
         "title": v["title"],
         "titleLowercase": v["title"].lower(),
         "url": v["url"],
-        "imageUrl": v["imageUrl"],
+        "imageUrl": thumbnail_map.get(
+        vid,
+        f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+        ),
         "timestamp": str(int(time.time() * 1000)),
     })
 

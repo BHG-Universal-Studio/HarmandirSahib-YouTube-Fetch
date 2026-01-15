@@ -68,6 +68,17 @@ def fetch_latest_5_matching():
     matches.sort(key=lambda x: x["published"], reverse=True)
     return matches[:5]
 
+
+
+def get_best_thumbnail(thumbnails: dict, video_id: str) -> str:
+    for key in ("maxres", "standard", "high", "medium", "default"):
+        if key in thumbnails and "url" in thumbnails[key]:
+            return thumbnails[key]["url"]
+
+    # Absolute safety fallback (API should normally prevent this)
+    return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+
+
 # ---------------- YOUTUBE API (SINGLE CALL) ----------------
 def fetch_video_details(video_ids):
     url = "https://www.googleapis.com/youtube/v3/videos"
@@ -111,13 +122,18 @@ def select_best_video(rss_videos, yt_videos):
         return None
 
     video_id = final["id"]
+    thumbnails = final["snippet"].get("thumbnails", {})
 
     return {
-        "title": final["snippet"]["title"],
-        "titleLowercase": final["snippet"]["title"].lower(),
-        "url": f"https://www.youtube.com/watch?v={final['id']}",
-        "imageUrl": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg"
+    "title": final["snippet"]["title"],
+    "titleLowercase": final["snippet"]["title"].lower(),
+    "url": f"https://www.youtube.com/watch?v={video_id}",
+    "imageUrl": get_best_thumbnail(thumbnails, video_id)
     }
+
+
+
+
 
 # ---------------- FIRESTORE UPDATE ----------------
 def update_firestore(data):

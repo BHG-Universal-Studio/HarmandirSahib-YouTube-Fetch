@@ -131,6 +131,42 @@ new_ids_added = []
 
 
 
+def get_best_thumbnail(thumbnails: dict, video_id: str) -> str:
+    for key in ("maxres", "standard", "high", "medium", "default"):
+        if key in thumbnails and "url" in thumbnails[key]:
+            return thumbnails[key]["url"]
+
+    # Absolute safety fallback
+    return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+
+
+
+def fetch_thumbnails_batch(video_ids):
+    thumbnail_map = {}
+    CHUNK_SIZE = 50
+
+    for chunk in chunk_list(video_ids, CHUNK_SIZE):
+        url = "https://www.googleapis.com/youtube/v3/videos"
+        params = {
+            "part": "snippet",
+            "id": ",".join(chunk),
+            "key": YOUTUBE_API_KEY,
+            "maxResults": 50
+        }
+
+        r = requests.get(url, params=params, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+
+        for item in data.get("items", []):
+            vid = item["id"]
+            thumbnails = item["snippet"].get("thumbnails", {})
+            thumbnail_map[vid] = get_best_thumbnail(thumbnails, vid)
+
+    return thumbnail_map
+
+
+
 # ---------------- RSS FETCH ----------------
 
 def fetch_videos_from_channel(channel_id):
@@ -196,8 +232,6 @@ def fetch_videos_from_channel(channel_id):
             "title": title_el.text.strip(),
 
             "url": f"https://www.youtube.com/watch?v={video_id}",
-
-            "imageUrl": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg",
 
             "published": published_dt
 
@@ -475,6 +509,8 @@ print("\n⏱️ Checking Durations...")
 
 duration_map = fetch_durations_batch(vod_candidate_ids)
 
+print("\n🖼️ Fetching thumbnails...")
+thumbnail_map = fetch_thumbnails_batch(vod_candidate_ids)
 
 
 # 5. Insert Final Videos
@@ -495,7 +531,10 @@ for v in vod_candidates:
     db.collection(COLLECTION_NAME).document().set({
         "title": v["title"],
         "url": v["url"],
-        "imageUrl": v["imageUrl"],
+        "imageUrl": thumbnail_map.get(
+        vid,
+        f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+        ),
         "timestamp": int(v["published"].timestamp() * 1000),
         "video_id": vid,
     })
