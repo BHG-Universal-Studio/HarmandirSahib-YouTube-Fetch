@@ -23,12 +23,21 @@ jobs:
           pip install requests firebase-admin google-cloud-firestore
           
 
-      - name: 🚀 Run Short Videos Fetch
+      - name: 🚀 Run All Videos Fetch
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: |
-          python Shorts-Fetch-YouTube.py
+          python All-Videos-Fetch.py
+
+
+      - name: 🛕 Run Takht Sri Kesgarh Sahib Fetch
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          python Takht-Sri-Kesgarh-Sahib-Fetch.py
+
 
 
      
