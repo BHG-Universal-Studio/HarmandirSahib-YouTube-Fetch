@@ -110,6 +110,8 @@ def select_best_video(rss_videos, yt_videos):
     if not final:
         return None
 
+    video_id = final["id"]
+
     return {
         "title": final["snippet"]["title"],
         "titleLowercase": final["snippet"]["title"].lower(),
