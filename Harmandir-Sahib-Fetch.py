@@ -82,6 +82,16 @@ def fetch_video_details(video_ids):
     r.raise_for_status()
     return r.json().get("items", [])
 
+
+def get_best_thumbnail(thumbnails: dict, video_id: str) -> str:
+    for key in ["maxres", "standard", "high", "medium", "default"]:
+        if key in thumbnails:
+            return thumbnails[key]["url"]
+
+    # Absolute fallback (safety)
+    return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+
+
 # ---------------- SELECT FINAL VIDEO ----------------
 def select_best_video(rss_videos, yt_videos):
     yt_map = {v["id"]: v for v in yt_videos}
@@ -111,12 +121,12 @@ def select_best_video(rss_videos, yt_videos):
         return None
 
     video_id = final["id"]
-
+    thumbnails = final["snippet"].get("thumbnails", {})
     return {
         "title": final["snippet"]["title"],
         "url": f"https://www.youtube.com/watch?v={final['id']}",
         "titleLowercase": final["snippet"]["title"].lower(),
-        "imageUrl": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg"
+        "imageUrl": get_best_thumbnail(thumbnails, video_id)
     }
 
 # ---------------- FIRESTORE UPDATE ----------------
@@ -174,3 +184,4 @@ if __name__ == "__main__":
     print(final_video)
 
     update_firestore(final_video)
+
