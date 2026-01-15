@@ -14,7 +14,7 @@ RSS_URL = f"https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}"
 SERVICE_ACCOUNT_JSON = os.environ["FIREBASE_SERVICE_ACCOUNT"]
 YOUTUBE_API_KEY = os.environ["YOUTUBE_API_KEY"]
 
-COLLECTION_NAME = "liveStreams"
+COLLECTION_NAME = "Live-Gurdwaras-YouTube"
 # --------------------------------------
 
 NS = {
