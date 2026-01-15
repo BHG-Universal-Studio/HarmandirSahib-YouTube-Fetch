@@ -125,12 +125,12 @@ def select_best_video(rss_videos, yt_videos):
     video_id = final["id"]
     thumbnails = final["snippet"].get("thumbnails", {})
 
-return {
+    return {
     "title": final["snippet"]["title"],
     "titleLowercase": final["snippet"]["title"].lower(),
     "url": f"https://www.youtube.com/watch?v={video_id}",
     "imageUrl": get_best_thumbnail(thumbnails, video_id)
-}
+    }
 
 
 # ---------------- FIRESTORE UPDATE ----------------
