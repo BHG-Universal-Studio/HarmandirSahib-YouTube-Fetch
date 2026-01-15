@@ -147,4 +147,12 @@ jobs:
           python All-Videos-Fetch.py
 
 
+      - name: 🎵 Run Shorts Youtube Fetch
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          python Shorts-Fetch-YouTube.py
+
+
      
