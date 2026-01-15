@@ -114,7 +114,7 @@ def select_best_video(rss_videos, yt_videos):
         "title": final["snippet"]["title"],
         "titleLowercase": final["snippet"]["title"].lower(),
         "url": f"https://www.youtube.com/watch?v={final['id']}",
-        "imageUrl": final["snippet"]["thumbnails"]["high"]["url"]
+        "imageUrl": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg"
     }
 
 # ---------------- FIRESTORE UPDATE ----------------
