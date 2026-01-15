@@ -68,7 +68,7 @@ def fetch_latest_hukamnama_katha():
     return {
         "imageUrl": f"https://i.ytimg.com/vi/{latest['video_id']}/maxresdefault.jpg",
         "title": latest["title"],
-        "url": f"https://www.youtube.com/watch?v={final['id']}",
+        "titleLowercase": final["snippet"]["title"].lower(),
         "url": f"https://www.youtube.com/watch?v={latest['video_id']}"
     }
 
